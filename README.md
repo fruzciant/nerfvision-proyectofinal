@@ -41,7 +41,7 @@ Estas serán las etapas que resolveremos con su entrada, salida y técnica emple
 + **Salida:** frame normalizado y redimensionado, listo para el detector.
 + **Técnica:** redimensionamiento a 640x640px (resolución nativa d eentrada de YOLOv8), normalización de intensidades al rango $[0,1]$ y conversión del espacio de color BGRtoRGB (porque OpenCV carga en BGR; YOLO espera RGB). Estas operaciones se delegan en buena parte al preprocesador interno de Ultralytics, pero se documentan y exponen como módulo propio para evidenciar la etapa.
 
-### Etapa 3 - Segmentación
+### Etapa 3 - Extracción de características/Segmentación
 + **Entrada:** frame preprocesado.
 + **Salida:** mapas de características y regiones candidatas (propuestas de bounding box con score).
 + **Técnica:** extracción jerárquica de características mediante la red convolucional troncal (backbone CSPDarknet) de YOLOv8. Las primeras capas detectan bordes, contornos y colores; las profundas combinan esos patrones en representaciones del objeto completo. Esta etapa es intrínseca a la arquitectura del detector y se documenta visualizando los mapas de activación intermedios sobre frames de ejemplo.
