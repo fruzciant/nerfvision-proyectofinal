@@ -60,3 +60,49 @@ Estas serán las etapas que resolveremos con su entrada, salida y técnica emple
     + **Trayectoria:** se almacena el centroide de cada ID por frame y se traza la polilínea de su recorrido sobre el vídeo.
     + **Visualización:** anotación con OpenCV (cajas, etiqueta, ID, score) y superposición de la trayectoria; render en la interfaz en Streamlit.
 
+## Dataset
+**Fuente:** dataset propio, construido para el proyecto.
+
+### Construcción:
+1. Captura de 4 videos cortos (~10 s) con celular a 60–120 FPS: (a) dardo sostenido y movido a distintos ángulos y distancias; (b–c) lanzamientos de izquierda a derecha y viceversa sobre el fondo definitivo; (d) dardo estático con variaciones leves de iluminación. Se incluirán deliberadamente algunos frames con dos o más dardos simultáneos para reforzar la detección de múltiples instancias.
+2. Extracción de ~1 frame cada 15 en Roboflow, obteniendo aproximadamente 80–100 imágenes.
+3. Etiquetado con bounding box, una sola clase `dardo`, con criterio inclusivo: los frames donde el dardo aparece elongado o borroso por la velocidad se etiquetan de todas formas, encerrando la mancha completa, para que el modelo pueda reconocer el objeto en el vuelo.
+4. Data augmentation **conservador:** solo desenfoque gaussiano ligero, variación de brillo ($\pm 10%$) y transformaciones geométricas sutiles, para emular el entorno real sin alejar las imágenes de las condicinoes controladas de prueba.
+5. **Spli por bloques de video independientes,** no por frames aleatorios: un video completo se reserva para validacíon, evitando que frames casi idénticos aparezcan a la vez en entrenamiento y validación e inflen artificialmente las métricas.
+
+**Justificación de pertinencia:** un dataset propio permie controlar fondo, iluminación y condicines de captura, alineado el entrenamiento con el escenari oexacto de evaluación. El dardo Nerf es un objeto de alto contraste (naranja/azul) y geometría definida, ideal para *transfer learning* con pocos datos, y su movimiento rápido convierte el problema en un caso ilustrativo de los retos de resolución tempral y motion blur propios de la visión por computador.
+
+## Interfaz de usuario
+**Framerwork:** Streamlit
+### Flujo de interacción:
+1. La aplicación abre con un panel donde el usuario elige el modo de entrada: **subir un archivo de video o usar la cámara en tiempo real.**
+2. Controles ajustables en la barra lateral: umbral de confianza (`conf`) y umbral de NMS (`iou`), para que el usuario explore su efecto sobre las detecciones en vivo.
+3. Al ejecutar el pipeline, la interfaz muestra el video anotado con las cajas de detección, el ID y la trayectoria de cada dardo y un contador de dardos únicos acumulado.
+4. Un panel de resultados despliega las métricas de evaluación sobre el conjunto de prueba y permite descagar el video anotado.
+
+La interfaz mostrará, como mínimo el frame de entrada y el resultado anotado con las detecciones.
+
+## Dependencias y entorno de ejecución
+Para instalar las dependencias, luego de clonar el repositorio, ejecute el comando: `pip install -r requirements.txt`. O con uv `uv pip install -r requirements.txt` dentro del entorno.
+
+| **Componente** | **DetalleS**  |
+|---|---|
+| **Lenguaje**  |  Python 3.10 |
+| **Detección/tracking**  | `ultralytics` (YOLOv8, ByteTrack)  |
+| **Procesamiento de imagen/video**  | `opencv-python`  |
+| **Cálculo numérico**  | `numpy`  |
+| **Interfaz**  | `streamlit`  |
+| **Visualización de métricas**  | `matplotlib`  |
+| **Entrenamiento**  | Google Colab, con GPU Nvidia T4  |
+| **Inferencia/despliegue**  | CPU (el modelo YOLOv8-nano, ~6 MB, corre > 30 FPS en CPU)  |
+
+El detalle de las versiones está en el archivo `requirements.txt`. El entrenamiento se hará en Colab; la aplicación final corre en la CPU en local, haciéndola reproducible sin usar hardware caro.
+
+
+## A considerar sobre la viabilidad y limitaciones conocidas
++ **Viabilidad:** el uso de transfer learning sobre YOLOv8-nano, un entorno controlado y un dataset compacto hace el proyecto ejecutable en el plazo previsto. El entrenamiento de un modelo nano con ~80-100 imágenes toma minutos en GPU T4.
++ **Limitación - motion blur:** dardos a velocidad real pueden aparecer muy borrosos. Se mitiga con captura a altos FPS y etiquetado inclusivo, pero puede afectar el recall en frames de máxima velocidad.
++ **Limitación - tracking de objetos veloces:** un dardo que se desplaza mucho entre frames o desaparece por blur puede recibir un ID nuevo del tracker, provocando **conteo doble.** Se mitiga con alto FPS (menor salto por frame) y entorno controlado; se documentará como caso de error en el análisis.
++ **Criterio de aceptación:** el prototipo se considerará exitoso si alcanza un $mAP50 \geq 0.7$ sobre el video de validación y mantiene la cuenta de dardos con un error aceptable en la demostración controlada.
+
+Bueno, quedamos a la espera de la aprobación antes de empezar.
