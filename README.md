@@ -60,5 +60,3 @@ Estas serán las etapas que resolveremos con su entrada, salida y técnica emple
     + **Trayectoria:** se almacena el centroide de cada ID por frame y se traza la polilínea de su recorrido sobre el vídeo.
     + **Visualización:** anotación con OpenCV (cajas, etiqueta, ID, score) y superposición de la trayectoria; render en la interfaz en Streamlit.
 
-
-

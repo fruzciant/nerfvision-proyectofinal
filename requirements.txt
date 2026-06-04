@@ -1,1 +1,6 @@
-# We'll be using python 3.11 for this project
+# Se prioriza las versiones más estables porque no queremos tener problemas con el Colab con el que vamos a entrenar el modelo, además de que no queremos tener problemas con la compatibilidad de las librerías. Por eso se han elegido versiones específicas para cada una de las librerías utilizadas en el proyecto.
+ultralytics==8.3.0
+opencv-python==4.10.0.84
+numpy==1.26.4
+streamlit==1.40.0
+matplotlib==3.9.2
