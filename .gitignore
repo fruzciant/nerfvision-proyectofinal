@@ -22,3 +22,6 @@ data/frames_raw/
 # esos sí se suben (dataset final y modelo entrenado).
 # Si best.pt supera el límite de GitHub (100 MB), súbelo con
 # Git LFS o deja instrucciones de descarga en el README.
+
+# Reporte
+report_structure.md
