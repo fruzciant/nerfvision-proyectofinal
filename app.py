@@ -1,111 +1,96 @@
 """
-NerfVision — App Streamlit
-Nivel 0-1: subir video + detección frame a frame.
+NerfVision — App Streamlit (modular)
+Orquesta las 5 etapas del pipeline, cada una en su módulo en src/.
 
-Estado actual:
-  - Usa el modelo GENÉRICO yolo11n.pt (COCO) como sustituto temporal.
-    Detectará personas, sillas, etc. — no dardos todavía. Es a propósito:
-    sirve para construir y probar la interfaz ANTES de tener best.pt.
-  - Cuando tengas tu modelo entrenado, cambia MODEL_PATH a "models/best.pt".
-
-Próximos niveles (ver comentarios marcados con  # >>> NIVEL N):
-  - Nivel 2: tracking + conteo de IDs únicos
-  - Nivel 3: trayectorias
-  - Nivel 4: sliders conf/iou + modo webcam
+Estado: usa el modelo genérico yolo11n.pt (COCO) como sustituto temporal.
+Para el detector de dardos real: entrena (ver notebooks/), coloca el modelo
+en models/best.pt y cambia MODEL_PATH abajo.
 
 Correr:
-    streamlit run app.py
+    uv run streamlit run app.py
 """
 
 import tempfile
 
-import cv2
 import streamlit as st
-from ultralytics import YOLO
 
-# ---------------------------------------------------------------------------
-# Configuración
-# ---------------------------------------------------------------------------
-# Nivel 1: modelo genérico para construir la UI.
-# Nivel 4: reemplazar por "models/best.pt" cuando esté entrenado.
+from src.acquisition import VideoSource
+from src.preprocessing import preprocess
+from src.detection import DartDetector
+from src.visualization import draw_overlay, draw_count
+
+# Nivel 1-3 (pruebas): "yolo11n.pt"  |  Nivel 4 (final): "models/best.pt"
 MODEL_PATH = "yolo11n.pt"
 
 
 @st.cache_resource
-def load_model(path):
-    """Carga el modelo una sola vez y lo cachea entre reruns de Streamlit."""
-    return YOLO(path)
+def load_detector(path):
+    """Carga el detector una sola vez y lo cachea entre reruns."""
+    return DartDetector(path)
 
 
-# ---------------------------------------------------------------------------
-# Interfaz
-# ---------------------------------------------------------------------------
 st.set_page_config(page_title="NerfVision", layout="wide")
-st.title("NerfVision — Detección de dardos Nerf")
+st.title("NerfVision — Detección y conteo de dardos Nerf")
 st.caption(
-    "Nivel 0-1: detección frame a frame. "
+    "Pipeline modular de 5 etapas. "
     "Usando modelo genérico (COCO) hasta integrar best.pt."
 )
 
-# >>> NIVEL 4: aquí irán los sliders de conf / iou en la barra lateral.
-# conf = st.sidebar.slider("Confianza (conf)", 0.0, 1.0, 0.25, 0.05)
-# iou  = st.sidebar.slider("NMS (iou)", 0.0, 1.0, 0.7, 0.05)
+# --- Controles (Etapa 4: parámetros de inferencia) ---
+conf = st.sidebar.slider("Umbral de confianza (conf)", 0.0, 1.0, 0.25, 0.05)
+iou = st.sidebar.slider("Umbral de NMS (iou)", 0.0, 1.0, 0.7, 0.05)
+low_light = st.sidebar.checkbox("Realce para poca luz (aula)", value=False)
+show_traj = st.sidebar.checkbox("Mostrar trayectorias", value=True)
 
-# >>> NIVEL 4: aquí irá el selector de modo (subir video / webcam).
-# mode = st.radio("Fuente", ["Subir video", "Cámara en tiempo real"])
+mode = st.radio("Fuente de entrada", ["Subir video", "Cámara en tiempo real"])
 
-uploaded = st.file_uploader(
-    "Sube un video", type=["mp4", "mov", "avi", "mkv"]
-)
+uploaded = None
+if mode == "Subir video":
+    uploaded = st.file_uploader("Video", type=["mp4", "mov", "avi", "mkv"])
 
-if uploaded is not None:
-    # Streamlit entrega el archivo en memoria; OpenCV necesita una ruta,
-    # así que lo escribimos a un archivo temporal.
-    tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
-    tfile.write(uploaded.read())
-    tfile.flush()
+start = st.button("Procesar")
 
-    model = load_model(MODEL_PATH)
+if start:
+    detector = load_detector(MODEL_PATH)
+    detector.reset()   # limpia estado de un video anterior
 
-    cap = cv2.VideoCapture(tfile.name)
-    if not cap.isOpened():
-        st.error("No se pudo abrir el video. Prueba otro formato.")
-        st.stop()
+    # --- Etapa 1: adquisición ---
+    if mode == "Subir video":
+        if uploaded is None:
+            st.warning("Sube un video primero.")
+            st.stop()
+        tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+        tfile.write(uploaded.read())
+        tfile.flush()
+        source = tfile.name
+    else:
+        source = 0   # webcam por defecto
 
-    frame_slot = st.empty()        # contenedor que se actualiza por frame
+    frame_slot = st.empty()
+    count_slot = st.sidebar.empty()
     progress = st.progress(0.0)
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT)) or 1
 
-    # >>> NIVEL 2: aquí inicializarías el tracker / set de IDs vistos.
-    # seen_ids = set()
-    # >>> NIVEL 3: aquí el diccionario de trayectorias.
-    # trajectories = {}
+    with VideoSource(source) as video:
+        if not video.is_opened():
+            st.error("No se pudo abrir la fuente de video.")
+            st.stop()
+        total = video.total_frames or 1
 
-    idx = 0
-    while cap.isOpened():
-        ok, frame = cap.read()
-        if not ok:
-            break
+        for idx, frame in enumerate(video.frames()):
+            # --- Etapa 2: preprocesamiento ---
+            frame = preprocess(frame, low_light=low_light)
 
-        # --- Inferencia (Nivel 1: detección simple) ---
-        results = model(frame, verbose=False)
-        annotated = results[0].plot()   # dibuja las cajas sobre el frame
+            # --- Etapas 3-4-5a: detección + tracking ---
+            results = detector.detect_and_track(frame, conf=conf, iou=iou)
 
-        # >>> NIVEL 2: cambiar la línea de arriba por:
-        #     results = model.track(frame, persist=True,
-        #                            tracker="bytetrack.yaml", verbose=False)
-        #     y recorrer results[0].boxes.id para contar IDs únicos.
+            # --- Etapa 5b: visualización ---
+            annotated = draw_overlay(results, detector.trajectories,
+                                     draw_trajectories=show_traj)
+            annotated = draw_count(annotated, detector.count)
 
-        # >>> NIVEL 3: calcular el centroide de cada caja y acumularlo en
-        #     trajectories[id], luego dibujar la polilínea sobre `annotated`.
+            frame_slot.image(annotated, channels="BGR",
+                             use_container_width=True)
+            count_slot.metric("Dardos únicos", detector.count)
+            progress.progress(min((idx + 1) / total, 1.0))
 
-        # Streamlit muestra en RGB; OpenCV trae BGR.
-        frame_slot.image(annotated, channels="BGR", use_container_width=True)
-
-        idx += 1
-        progress.progress(min(idx / total, 1.0))
-
-    cap.release()
-    st.success("Procesamiento terminado.")
-else:
-    st.info("Sube un video para empezar.")
+    st.success(f"Listo. Dardos únicos detectados: {detector.count}")
