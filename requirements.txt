@@ -1,6 +1,18 @@
-# Se prioriza las versiones más estables porque no queremos tener problemas con el Colab con el que vamos a entrenar el modelo, además de que no queremos tener problemas con la compatibilidad de las librerías. Por eso se han elegido versiones específicas para cada una de las librerías utilizadas en el proyecto.
-ultralytics==8.3.0
-opencv-python==4.10.0.84
-numpy==1.26.4
-streamlit==1.40.0
-matplotlib==3.9.2
+# requirements.txt — NerfVision
+# Proyecto Final, Visión por Computador
+# Universidad Nacional de Colombia — Sede de La Paz
+# Python 3.10+
+
+ultralytics==8.3.0        # YOLO11 + ByteTrack (tracking integrado)
+opencv-python-headless==4.10.0.84  # lectura de video/cámara y anotación de frames
+numpy==1.26.4             # numpy<2.1 evita el conflicto con numba en Colab
+streamlit==1.40.0         # interfaz de usuario
+matplotlib==3.9.2         # gráficas de métricas y trayectorias
+
+# Nota: torch / torchvision NO se fijan aquí a propósito.
+# ultralytics los instala como dependencia, y en Colab ya vienen
+# con la build correcta para la GPU. Fijarlos a la fuerza puede
+# romper el soporte CUDA.
+
+# Nota: label-studio se instala en un entorno virtual APARTE
+# (ver README). Es pesado y conviene no mezclarlo con la app.

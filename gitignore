@@ -1,0 +1,24 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Ultralytics / entrenamiento
+runs/
+
+# Archivos intermedios y pesados
+*.zip
+data/videos_raw/
+data/frames_raw/
+
+# Sistema
+.DS_Store
+
+# NOTA: NO se ignora data/dataset/ ni models/best.pt:
+# esos sí se suben (dataset final y modelo entrenado).
+# Si best.pt supera el límite de GitHub (100 MB), súbelo con
+# Git LFS o deja instrucciones de descarga en el README.
