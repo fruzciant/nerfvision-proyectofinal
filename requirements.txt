@@ -8,6 +8,7 @@ opencv-python-headless==4.10.0.84  # lectura de video/cámara y anotación de fr
 numpy==1.26.4             # numpy<2.1 evita el conflicto con numba en Colab
 streamlit==1.40.0         # interfaz de usuario
 matplotlib==3.9.2         # gráficas de métricas y trayectorias
+lap==0.4.0                # algoritmo de asignación para tracking
 
 # Nota: torch / torchvision NO se fijan aquí a propósito.
 # ultralytics los instala como dependencia, y en Colab ya vienen
