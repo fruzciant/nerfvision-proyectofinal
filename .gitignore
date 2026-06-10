@@ -1,6 +1,7 @@
 # Entorno virtual
 .venv/
 venv/
+nerfi/
 
 # Python
 __pycache__/
