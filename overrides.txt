@@ -1,0 +1,12 @@
+# overrides.txt — NerfVision
+# Excluye opencv-python (con GUI) de la resolución de dependencias.
+# ultralytics lo declara como dependencia, pero este proyecto usa
+# opencv-python-headless (en Linux sin librerías gráficas, el completo
+# falla con: ImportError: libgthread-2.0.so.0).
+#
+# Instalar SIEMPRE con:
+#   uv pip install -r requirements.txt --overrides overrides.txt
+#
+# El marcador "sys_platform == 'never'" nunca se cumple, así que
+# uv trata opencv-python como no-requerido y no lo instala.
+opencv-python; sys_platform == "never"

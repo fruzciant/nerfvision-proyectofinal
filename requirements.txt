@@ -8,7 +8,15 @@ opencv-python-headless==4.10.0.84  # lectura de video/cámara y anotación de fr
 numpy==1.26.4             # numpy<2.1 evita el conflicto con numba en Colab
 streamlit==1.40.0         # interfaz de usuario
 matplotlib==3.9.2         # gráficas de métricas y trayectorias
-lap                # algoritmo de asignación para tracking
+lap==0.5.13               # algoritmo de asignación para tracking
+
+
+# IMPORTANTE: instalar SIEMPRE con el archivo de overrides:
+#   uv pip install -r requirements.txt --overrides overrides.txt
+# ultralytics declara opencv-python (con GUI) como dependencia; el override
+# lo excluye para que solo quede el headless. NO desinstalar opencv-python
+# a mano: ambos paquetes comparten el directorio cv2/ y desinstalar uno
+# borra los archivos del otro (deja el entorno sin cv2).
 
 # Nota: torch / torchvision NO se fijan aquí a propósito.
 # ultralytics los instala como dependencia, y en Colab ya vienen

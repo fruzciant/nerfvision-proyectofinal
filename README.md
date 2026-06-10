@@ -83,13 +83,13 @@ Estas serán las etapas que resolveremos con su entrada, salida y técnica emple
 La interfaz mostrará, como mínimo el frame de entrada y el resultado anotado con las detecciones.
 
 ## Dependencias y entorno de ejecución
-Para instalar las dependencias, luego de clonar el repositorio, ejecute el comando: `pip install -r requirements.txt`. O con uv `uv pip install -r requirements.txt` dentro del entorno.
+Para instalar las dependencias, luego de clonar el repositorio, ejecute dentro del entorno: `uv pip install -r requirements.txt --overrides overrides.txt`. El archivo `overrides.txt` excluye `opencv-python` (con GUI), que `ultralytics` arrastra como dependencia transitiva: este proyecto usa `opencv-python-headless`, y si ambos coexisten la importación de `cv2` falla en Linux sin librerías gráficas (`libgthread-2.0.so.0`).
 
 | **Componente** | **DetalleS**  |
 |---|---|
 | **Lenguaje**  |  Python 3.10 |
 | **Detección/tracking**  | `ultralytics` (YOLOv8, ByteTrack)  |
-| **Procesamiento de imagen/video**  | `opencv-python`  |
+| **Procesamiento de imagen/video**  | `opencv-python-headless`  |
 | **Cálculo numérico**  | `numpy`  |
 | **Interfaz**  | `streamlit`  |
 | **Visualización de métricas**  | `matplotlib`  |
