@@ -24,4 +24,4 @@ data/frames_raw/
 # Git LFS o deja instrucciones de descarga en el README.
 
 # Reporte
-report_structure.md
+data.yaml

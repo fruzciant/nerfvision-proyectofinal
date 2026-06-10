@@ -22,11 +22,17 @@ from src.visualization import draw_overlay, draw_count
 # Nivel 1-3 (pruebas): "yolo11n.pt"  |  Nivel 4 (final): "models/best.pt"
 MODEL_PATH = "yolo11n.pt"
 
+# ¿Es el modelo entrenado (dardo+pistola) o el genérico de COCO?
+# Con el genérico NO existe la clase 'dardo', así que contamos TODO (None).
+# Con best.pt activamos el filtro para contar SOLO dardos (clase 0).
+USING_TRAINED_MODEL = MODEL_PATH.endswith("best.pt")
+COUNT_CLASS = 0 if USING_TRAINED_MODEL else None   # 0 = dardo en data.yaml
+
 
 @st.cache_resource
-def load_detector(path):
+def load_detector(path, count_class):
     """Carga el detector una sola vez y lo cachea entre reruns."""
-    return DartDetector(path)
+    return DartDetector(path, count_only_class=count_class)
 
 
 st.set_page_config(page_title="NerfVision", layout="wide")
@@ -51,7 +57,7 @@ if mode == "Subir video":
 start = st.button("Procesar")
 
 if start:
-    detector = load_detector(MODEL_PATH)
+    detector = load_detector(MODEL_PATH, COUNT_CLASS)
     detector.reset()   # limpia estado de un video anterior
 
     # --- Etapa 1: adquisición ---
