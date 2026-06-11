@@ -26,3 +26,5 @@ data/frames_raw/
 
 # Reporte
 data.yaml
+data/
+scripts/

@@ -20,7 +20,7 @@ from src.detection import DartDetector
 from src.visualization import draw_overlay, draw_count
 
 # Nivel 1-3 (pruebas): "yolo11n.pt"  |  Nivel 4 (final): "models/best.pt"
-MODEL_PATH = "yolo11n.pt"
+MODEL_PATH = "models/best.pt"
 
 # ¿Es el modelo entrenado (dardo+pistola) o el genérico de COCO?
 # Con el genérico NO existe la clase 'dardo', así que contamos TODO (None).
