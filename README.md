@@ -82,7 +82,7 @@ nerfvision-proyectofinal/
 
 ```bash
 # Clonar el repositorio
-git clone <url-del-repo>
+git clone https://github.com/fruzciant/nerfvision-proyectofinal
 cd nerfvision-proyectofinal
 
 # Instalar dependencias (el override excluye opencv-python con GUI)
